@@ -1,0 +1,12 @@
+### Python Modules
+_Environment/
+_compile/
+~forGit/
+~forArchive/
+
+### Configs
+Config/
+PythonPath.txt
+
+### Executable
+App/Simple Directory Overseer.exe
