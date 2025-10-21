@@ -38,26 +38,30 @@ with open(os.path.join(appPathConfig, 'Watchlist.txt'), mode='r', encoding='utf_
 	_List = [line.strip() for line in f.readlines()] # Array which should contain "os.path.sep" at end
 with open(os.path.join(appPathConfig, 'IgnoreWatchlist.txt'), mode='r', encoding='utf_8') as f:
 	_IgnoreList = [line.strip() for line in f.readlines()]
-with open(os.path.join(appPathConfig, 'language.txt'), mode='r', encoding='utf_8') as f:
-	osLanguage = f.readline().strip('\n') # "en" or "ru"
+with open(os.path.join(appPathConfig, 'Settings.txt'), mode='r', encoding='utf_8') as f:
+	_Settings = {line.split(':')[0].strip(): line.split(':')[1].strip() for line in f.readlines() if line.strip() and ':' in line}
+#print(_Settings)
 
 TasksForDirectories = {}
 
   ##~~~~~~~~~~~~~~~~~~# Menus Labels #~~~~~~~~~~~~~~~~~~##
-LabelExit = "Выйти из программы" if osLanguage == "ru" else "Exit the program"
-LabelReload = "Перезапустить эту программу" if osLanguage == "ru" else "Restart this program"
-LabelCloseGUI = "Прикрыть окно программы" if osLanguage == "ru" else "Withdraw program's window"
-LabelOpenGUI = "Показать окно программы" if osLanguage == "ru" else "Show program's window"
+# There only "en" and "ru" params for _Settings['language']
+LabelExit = "Выйти из программы" if _Settings['language'] == "ru" else "Exit the program"
+LabelReload = "Перезапустить эту программу" if _Settings['language'] == "ru" else "Restart this program"
+LabelCloseGUI = "Прикрыть окно программы" if _Settings['language'] == "ru" else "Withdraw program's window"
+LabelOpenGUI = "Показать окно программы" if _Settings['language'] == "ru" else "Show program's window"
 
   ##~~~~~~~~~~~~~~~~~~# Labels #~~~~~~~~~~~~~~~~~~##
-LabelForCreate = " Создано: " if osLanguage == "ru" else " Created: "
-LabelForDelete = " Удалено: " if osLanguage == "ru" else " Deleted: "
-LabelForModify = " Изменено: " if osLanguage == "ru" else " Modified: "
+LabelForCreate = " Создано: " if _Settings['language'] == "ru" else " Created: "
+LabelForDelete = " Удалено: " if _Settings['language'] == "ru" else " Deleted: "
+LabelForModify = " Вызвано: " if _Settings['language'] == "ru" else " Called: "
+LabelForMove = " Передвинуто: " if _Settings['language'] == "ru" else " Moved: "
 
   ##~~~~~~~~~~~~~~~~~~# Style #~~~~~~~~~~~~~~~~~~##
 ColorGreen = { 'color': '#00ff00', 'tag': 'Green' }
 ColorRed = { 'color': '#ff0000', 'tag': 'Red' }
 ColorYellow = { 'color': '#ffff00', 'tag': 'Yellow' }
+ColorWhite = { 'color': '#ffffff', 'tag': 'White' }
 
   ##~~~~~~~~~~~~~~~~~~# Main Menus Functions #~~~~~~~~~~~~~~~~~~##
 def stopAll():
@@ -130,8 +134,8 @@ def isIgnored(path):
 	#else:
 		#return fixPath(path).startswith(tuple(_IgnoreList))
 	return any(
-		bool(re.search(line[8:], path)) if line.startswith("RegExp: ") # line[8:] is for get only part after "RegExp: "
-		else path.startswith(line)
+		bool(re.search(line[8:], fixPath(path))) if line.startswith("RegExp: ") # line[8:] is for get only part after "RegExp: "
+		else fixPath(path).startswith(line)
 		for line in _IgnoreList
 	)
 
@@ -157,15 +161,20 @@ class directoriesHandler(wdFileSystemEventHandler):
 		#return super().on_created(event)
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForCreate + fixPath(event.src_path) + "\n", ColorGreen['tag'])
-		return None
+		return
 	def on_deleted(self, event) -> None:
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForDelete + fixPath(event.src_path) + "\n", ColorRed['tag'])
-		return None
-	def on_modified(self, event) -> None:
+		return
+	def on_modified(self, event) -> None: # Also triggers on access. When it is called twice in a row, it often means that a file content has changed
+		if _Settings['ignore_modified'].lower() == 'true': return # User must deliberately set true if they do not need it
 		if not isIgnored(event.src_path):
-			updateTextArea(currentTime() + LabelForModify + fixPath(event.src_path) + "\n", ColorYellow['tag'])
-		return None
+			updateTextArea(currentTime() + LabelForModify + fixPath(event.src_path) + "\n", ColorWhite['tag'])
+		return
+	def on_moved(self, event) -> None: # Also triggers on rename
+		if not isIgnored(event.src_path):
+			updateTextArea(currentTime() + LabelForMove + fixPath(event.src_path) + " => " + fixPath(event.dest_path) + "\n", ColorYellow['tag'])
+		return
 
 def directoriesTask(directory):
 	pathObserver = wdObserver()
@@ -189,6 +198,7 @@ rootGUI.text_area.configure(background = 'black')
 rootGUI.text_area.tag_configure(ColorGreen['tag'], foreground = ColorGreen['color'])
 rootGUI.text_area.tag_configure(ColorRed['tag'], foreground = ColorRed['color'])
 rootGUI.text_area.tag_configure(ColorYellow['tag'], foreground = ColorYellow['color'])
+rootGUI.text_area.tag_configure(ColorWhite['tag'], foreground = ColorWhite['color'])
 
 GUIscrollbar = tk.Scrollbar(rootGUI, command=rootGUI.text_area.yview)
 rootGUI.text_area.config(yscrollcommand=GUIscrollbar.set)
