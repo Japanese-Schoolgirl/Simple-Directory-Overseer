@@ -78,7 +78,7 @@ def startAll():
 	for path in _List:
 		# [!] this is probably a very cursed part, but it's good that I know almost nothing about Python, so I will not understand a extent of the horror
 		global TasksForDirectories
-		TasksForDirectories[path] = directoriesTask(path) # Path should exist
+		TasksForDirectories[path] = directoriesTask(path) # [!!!] Path from this var should exist in this system
 		TasksForDirectories[path].start()
 	ThreadTrayApp.start()
 	rootGUI.mainloop()
@@ -105,16 +105,30 @@ def GUI_Close():
 
 def updateTextArea(insertLabel, colorTag = ColorRed['tag']):
 	#print(insertLabel)
-	#print(rootGUI.text_area.index('end-1c').split('.')[0])
+	#print(rootGUI.core_textarea.index('end-1c').split('.')[0])
 
-	rootGUI.text_area.configure(state='normal')
+	rootGUI.core_textarea.configure(state='normal')
 	# Remove line if lines reach limit of 5 000
-	if int(rootGUI.text_area.index('end-1c').split('.')[0]) > 5000:
-		rootGUI.text_area.delete(1.0, 2.0)
-	rootGUI.text_area.insert(tk.END, insertLabel, colorTag)
-	rootGUI.text_area.configure(state='disabled')
+	if int(rootGUI.core_textarea.index('end-1c').split('.')[0]) > 5000:
+		rootGUI.core_textarea.delete(1.0, 2.0)
+	rootGUI.core_textarea.insert(tk.END, insertLabel, colorTag)
+	rootGUI.core_textarea.configure(state='disabled')
 	# Automatically scroll to last line
-	rootGUI.text_area.see(tk.END)
+	rootGUI.core_textarea.see(tk.END)
+
+def fixFor_TextActions(e): # For some reason, Tkinter does not work well with different keyboard layouts
+	if e.keycode == 67 and e.keysym.lower() != 'c':
+		e.widget.event_generate('<<Copy>>')
+		return 'break' # This part is not necessary because of "e.keysym != 'c'", but it added just in case if Tkinter suddenly fix strange problem with binds
+	elif e.keycode == 86 and e.keysym.lower() != 'v':
+		e.widget.event_generate('<<Paste>>')
+		return 'break'
+	elif e.keycode == 88 and e.keysym.lower() != 'x':
+		e.widget.event_generate('<<Cut>>')
+		return 'break'
+	elif e.keycode == 65:
+		e.widget.tag_add('sel', '1.0', 'end-1c') # "end-1c" instead of just "end" is used to not allocate last empty lane
+		return 'break' # This part is needed to prevent Tkinter's standard Ctrl+A behavior
 
 def currentTime():
 	return '[' + datetime.datetime.now().strftime('%H:%M:%S') + ']'
@@ -186,23 +200,25 @@ rootGUI = tk.Tk()
 rootGUI.title(appTitleName)
 rootGUI.iconphoto(False, PIL.ImageTk.PhotoImage(IMG_TrayIcon))
 rootGUI.protocol('WM_DELETE_WINDOW', GUI_Close)
-rootGUI.configure(background = 'purple')
+rootGUI.configure(background = 'purple') # "#e6e6fa" for Lavender
 rootGUI.minsize(800, 300)
 
 # Create text field
-rootGUI.text_area = tk.Text(rootGUI, font=('Arial', 8), state='disabled', width=40, height=10)
-rootGUI.text_area.pack(fill='both', expand=True)
-rootGUI.text_area.pack(padx=4, pady=4)
+rootGUI.core_textarea = tk.Text(rootGUI, font=('Arial', 8), state='disabled', width=40, height=10, borderwidth=2, relief="flat")
+rootGUI.core_textarea.pack(fill='both', expand=True)
+rootGUI.core_textarea.pack(padx=4, pady=4) # If you don't like GUI's border then comment/remove this line
 
-rootGUI.text_area.configure(background = 'black')
-rootGUI.text_area.tag_configure(ColorGreen['tag'], foreground = ColorGreen['color'])
-rootGUI.text_area.tag_configure(ColorRed['tag'], foreground = ColorRed['color'])
-rootGUI.text_area.tag_configure(ColorYellow['tag'], foreground = ColorYellow['color'])
-rootGUI.text_area.tag_configure(ColorWhite['tag'], foreground = ColorWhite['color'])
+rootGUI.core_textarea.configure(background = 'black')
+rootGUI.core_textarea.tag_configure(ColorGreen['tag'], foreground = ColorGreen['color'])
+rootGUI.core_textarea.tag_configure(ColorRed['tag'], foreground = ColorRed['color'])
+rootGUI.core_textarea.tag_configure(ColorYellow['tag'], foreground = ColorYellow['color'])
+rootGUI.core_textarea.tag_configure(ColorWhite['tag'], foreground = ColorWhite['color'])
 
-GUIscrollbar = tk.Scrollbar(rootGUI, command=rootGUI.text_area.yview)
-rootGUI.text_area.config(yscrollcommand=GUIscrollbar.set)
-rootGUI.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+rootGUI.core_textarea.bind("<Control-Key>", fixFor_TextActions) # Fix for strange glitch
+
+GUIscrollbar = tk.Scrollbar(rootGUI, command=rootGUI.core_textarea.yview)
+rootGUI.core_textarea.config(yscrollcommand=GUIscrollbar.set)
+rootGUI.core_textarea.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 GUIscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
 # Create text for GUI from array
@@ -212,7 +228,7 @@ GUIscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 #	"789."
 #]
 #for line in text_array:
-#	rootGUI.text_area.insert(tk.END, line + "\n")
+#	rootGUI.core_textarea.insert(tk.END, line + "\n")
 
   ##~~~~~~~~~~~~~~~~~~# Code #~~~~~~~~~~~~~~~~~~##
 def main():
