@@ -1,0 +1,8 @@
+C:\Windows\Prefetch\
+C:\Windows\ServiceState\EventLog\
+C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Credentials\
+C:\Windows\servicing\Packages\
+C:\Windows\servicing\LCU\
+C:\Windows\Fonts\
+RegExp: \.TMP$
+C:\ProgramData\NVIDIA Corporation\Drs\nvAppTimestamps\
