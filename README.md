@@ -18,6 +18,7 @@ The application will only monitor the directories specified in `“/Config/Watch
 C:\
 D:\Steam\userdata\
 ```
+**These paths must exist** on your system, otherwise the script will fail.
 
 # Example of "IgnoreWatchlist.txt":
 ```
