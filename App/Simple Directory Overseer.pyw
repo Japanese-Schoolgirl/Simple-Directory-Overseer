@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 import datetime
+import re
 import PIL.Image
 import PIL.ImageTk
 import threading
@@ -124,7 +125,16 @@ def isIgnored(path):
 	#print(_IgnoreList)
 	#print(fixPath(path))
 	#print(fixPath(path).startswith(tuple(_IgnoreList)))
-	return fixPath(path).startswith(tuple(_IgnoreList))
+	#if any(path.startswith("RegExp: ") for path in _IgnoreList):
+		#return re.match(...)
+	#else:
+		#return fixPath(path).startswith(tuple(_IgnoreList))
+	return any(
+		bool(re.search(line[8:], path)) if line.startswith("RegExp: ") # line[8:] is for get only part after "RegExp: "
+		else path.startswith(line)
+		for line in _IgnoreList
+	)
+
 
 
   ##~~~~~~~~~~~~~~~~~~# Code for Tray #~~~~~~~~~~~~~~~~~~##

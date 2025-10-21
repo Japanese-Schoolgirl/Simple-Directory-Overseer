@@ -25,5 +25,6 @@ C:\Windows\Prefetch\
 C:\Windows\ServiceState\EventLog\
 C:\Windows\System32\config\systemprofile\
 C:\Windows\servicing\
+RegExp: \.TMP$
 C:\ProgramData\NVIDIA Corporation\Drs\nvAppTimestamps\
 ```
