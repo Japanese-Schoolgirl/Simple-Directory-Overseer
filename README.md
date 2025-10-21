@@ -27,5 +27,6 @@ C:\Windows\ServiceState\EventLog\
 C:\Windows\System32\config\systemprofile\
 C:\Windows\servicing\
 RegExp: \.TMP$
+RegExp: (?i)\.cat$
 C:\ProgramData\NVIDIA Corporation\Drs\nvAppTimestamps\
 ```
