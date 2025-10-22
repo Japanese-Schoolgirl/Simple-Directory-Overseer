@@ -39,23 +39,23 @@ with open(os.path.join(appPathConfig, 'Watchlist.txt'), mode='r', encoding='utf_
 with open(os.path.join(appPathConfig, 'IgnoreWatchlist.txt'), mode='r', encoding='utf_8') as f:
 	_IgnoreList = [line.strip() for line in f.readlines()]
 with open(os.path.join(appPathConfig, 'Settings.txt'), mode='r', encoding='utf_8') as f:
-	_Settings = {line.split(':')[0].strip(): line.split(':')[1].strip() for line in f.readlines() if line.strip() and ':' in line}
+	_Settings = {line.split(':')[0].strip(): line.split(':')[1].strip().lower() for line in f.readlines() if line.strip() and ':' in line}
 #print(_Settings)
 
 TasksForDirectories = {}
 
   ##~~~~~~~~~~~~~~~~~~# Menus Labels #~~~~~~~~~~~~~~~~~~##
 # There only "en" and "ru" params for _Settings['language']
-LabelExit = "Выйти из программы" if _Settings['language'] == "ru" else "Exit the program"
-LabelReload = "Перезапустить эту программу" if _Settings['language'] == "ru" else "Restart this program"
-LabelCloseGUI = "Прикрыть окно программы" if _Settings['language'] == "ru" else "Withdraw program's window"
-LabelOpenGUI = "Показать окно программы" if _Settings['language'] == "ru" else "Show program's window"
+LabelExit = "Выйти из программы" if _Settings.get('language') == "ru" else "Exit the program"
+LabelReload = "Перезапустить эту программу" if _Settings.get('language') == "ru" else "Restart this program"
+LabelCloseGUI = "Прикрыть окно программы" if _Settings.get('language') == "ru" else "Withdraw program's window"
+LabelOpenGUI = "Показать окно программы" if _Settings.get('language') == "ru" else "Show program's window"
 
   ##~~~~~~~~~~~~~~~~~~# Labels #~~~~~~~~~~~~~~~~~~##
-LabelForCreate = " Создано: " if _Settings['language'] == "ru" else " Created: "
-LabelForDelete = " Удалено: " if _Settings['language'] == "ru" else " Deleted: "
-LabelForModify = " Вызвано: " if _Settings['language'] == "ru" else " Called: "
-LabelForMove = " Передвинуто: " if _Settings['language'] == "ru" else " Moved: "
+LabelForCreate = " Создано: " if _Settings.get('language') == "ru" else " Created: "
+LabelForDelete = " Удалено: " if _Settings.get('language') == "ru" else " Deleted: "
+LabelForModify = " Вызвано: " if _Settings.get('language') == "ru" else " Called: "
+LabelForMove = " Передвинуто: " if _Settings.get('language') == "ru" else " Moved: "
 
   ##~~~~~~~~~~~~~~~~~~# Style #~~~~~~~~~~~~~~~~~~##
 ColorGreen = { 'color': '#00ff00', 'tag': 'Green' }
@@ -172,20 +172,23 @@ ThreadTrayApp = threading.Thread(target=TrayApp.run, daemon=True)
   ##~~~~~~~~~~~~~~~~~~# Code for Directories #~~~~~~~~~~~~~~~~~~##
 class directoriesHandler(wdFileSystemEventHandler):
 	def on_created(self, event) -> None:
+		if _Settings.get('ignore_created') == 'true': return
 		#return super().on_created(event)
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForCreate + fixPath(event.src_path) + "\n", ColorGreen['tag'])
 		return
 	def on_deleted(self, event) -> None:
+		if _Settings.get('ignore_deleted') == 'true': return
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForDelete + fixPath(event.src_path) + "\n", ColorRed['tag'])
 		return
 	def on_modified(self, event) -> None: # Also triggers on access. When it is called twice in a row, it often means that a file content has changed
-		if _Settings['ignore_modified'].lower() == 'true': return # User must deliberately set true if they do not need it
+		if _Settings.get('ignore_modified') == 'true': return # User must deliberately set true if they do not need it
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForModify + fixPath(event.src_path) + "\n", ColorWhite['tag'])
 		return
 	def on_moved(self, event) -> None: # Also triggers on rename
+		if _Settings.get('ignore_moved') == 'true': return
 		if not isIgnored(event.src_path):
 			updateTextArea(currentTime() + LabelForMove + fixPath(event.src_path) + " => " + fixPath(event.dest_path) + "\n", ColorYellow['tag'])
 		return
