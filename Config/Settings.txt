@@ -1,2 +1,5 @@
 language: en
+ignore_created: false
+ignore_deleted: false
 ignore_modified: false
+ignore_moved: false
